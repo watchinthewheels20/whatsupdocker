@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - '**'
+      - '!feat/personal-dockerhub'
     tags:
       - '*.*.*'
   pull_request:

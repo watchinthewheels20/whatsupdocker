@@ -48,7 +48,7 @@ jobs:
       - name: Lint, unit test, and build backend
         run: |
           npm run lint --prefix app
-          npm test --prefix app -- --runInBand
+          npm test --prefix app -- --maxWorkers=2
           npm run build --prefix app
       - name: Lint, unit test, and build frontend
         run: |

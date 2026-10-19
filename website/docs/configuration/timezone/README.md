@@ -4,6 +4,8 @@ import TabItem from '@theme/TabItem';
 
 # Timezone
 
+Saved [update schedules](../update-management.md) have their own explicit IANA timezone, initially `Europe/London`. Their timezone takes precedence over `TZ` for those runs.
+
 WUD runs in UTC by default. \
 If you prefer using your local timezone, you have two options:
 

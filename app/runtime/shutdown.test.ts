@@ -18,6 +18,10 @@ jest.mock('../log', () => {
     return mockLogger;
 });
 
+jest.mock('../schedules', () => ({
+    stopSchedules: jest.fn().mockResolvedValue(undefined),
+}));
+
 jest.mock('../api', () => ({
     close: jest.fn().mockResolvedValue(undefined),
 }));

@@ -796,3 +796,26 @@ describe('ContainersView', () => {
     });
   });
 });
+
+describe('container update selection', () => {
+  it('selects the filtered rows and excludes hidden or removed targets', async () => {
+    const wrapper = mount(ContainersView, { global: { stubs: { 'container-filter': true, 'bulk-update-dialog': true, 'schedule-dialog': true } } });
+    const vm = wrapper.vm as any;
+    vm.currentUser = { role: "admin" };
+    vm.containers = JSON.parse(JSON.stringify(mockContainers));
+    vm.searchQuery = 'Container 1';
+    vm.selectFiltered();
+    expect(vm.selectedIds).toEqual(['1']);
+    vm.openBulkUpdate(); expect(vm.bulkContainers.map((item: { id: string }) => item.id)).toEqual(['1']);
+    vm.onSseContainerRemoved('1'); expect(vm.selectedIds).toEqual([]);
+    wrapper.unmount();
+  });
+  it('does not open mutations for read-only users or details from a selection click', async () => {
+    const wrapper = mount(ContainersView, { global: { stubs: { 'container-filter': true, 'bulk-update-dialog': true, 'schedule-dialog': true } } });
+    const vm = wrapper.vm as any; vm.currentUser = { role: 'ro' };
+    vm.openBulkUpdate(mockContainers[0], 'stack'); vm.openScheduleDialog(mockContainers[0]);
+    expect(vm.dialogBulkUpdate).toBe(false); expect(vm.dialogSchedule).toBe(false);
+    vm.onRowClick({ target: { closest: () => true } }, { item: mockContainers[0] }); expect(vm.drawerOpen).toBe(false);
+    wrapper.unmount();
+  });
+});

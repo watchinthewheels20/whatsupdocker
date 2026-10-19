@@ -56,6 +56,8 @@ docker run -d --name wud \
 It's time to [**configure your triggers**](../configuration/triggers/README.md)!
 :::
 
+For this personal build on Unraid, see [Bulk updates and schedules](../configuration/update-management.md) for image build instructions, persistent storage, and Compose project mounts.
+
 ## Going deeper
 
 :::info[Need to fine-tune how WUD monitors your containers?]

@@ -2,6 +2,10 @@ import Component from '../registry/Component';
 import { Container } from '../model/container';
 import * as event from '../event';
 
+export interface WatchOptions {
+    emitReport?: boolean;
+}
+
 export interface ReconcileOptions {
     /** Previous container ID that was superseded or replaced */
     oldContainerId?: string;
@@ -93,12 +97,12 @@ abstract class Watcher extends Component {
      */
     protected readonly containerChecks = new Map<string, Promise<unknown>>();
 
-    async watchContainer(container: Container) {
+    async watchContainer(container: Container, options: WatchOptions = {}) {
         const previous =
             this.containerChecks.get(container.id) ?? Promise.resolve();
         const check = previous
             .catch(() => undefined)
-            .then(() => this.checkContainer(container));
+            .then(() => this.checkContainer(container, options));
         this.containerChecks.set(container.id, check);
         try {
             return await check;
@@ -108,7 +112,10 @@ abstract class Watcher extends Component {
         }
     }
 
-    protected abstract checkContainer(container: Container): Promise<any>;
+    protected abstract checkContainer(
+        container: Container,
+        options?: WatchOptions,
+    ): Promise<any>;
 }
 
 export default Watcher;

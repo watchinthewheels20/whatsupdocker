@@ -69,6 +69,8 @@ flowchart LR
   Discord, Matrix, Mattermost, Zulip, Telegram, Slack, Signal, WhatsApp, Bark, Prowl, Home Assistant, Gotify, Ntfy, Pushover, Apprise, Webhooks, Kafka, AMQP/RabbitMQ, NATS, Opsgenie, PagerDuty, Uptime Kuma, GitHub Actions, GitLab CI, SMTP email, shell scripts, and native Docker / Compose / Nomad auto-updaters.
 - 🔄 **Automated Container Updates**  
   Automatically pull new images and recreate containers on demand (Docker, Docker Compose, Nomad).
+- 🗓️ **Bulk Updates & Persistent Schedules**
+  Select multiple containers, check and apply updates on a per-target schedule with an explicit timezone, and reconcile entire Docker Compose projects. See the [Unraid and update management guide](website/docs/configuration/update-management.md) and [personal image publishing guide](docs/publishing-personal-image.md).
 - ⚡ **Registry Webhooks**: [Registry push notifications](website/docs/configuration/registries/webhooks.md), including GitLab Self-Managed, immediately check matching watched images while preserving existing labels and trigger policies.
 - 🏷️ **SemVer & Tag Filtering**  
   Flexible versioning strategies: target `semver` (major, minor, patch), match custom regular expressions, pin versions, or define include/exclude tag rules.

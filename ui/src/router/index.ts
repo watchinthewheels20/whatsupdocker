@@ -11,6 +11,11 @@ import { nextTick } from "vue";
 
 const routes: RouteRecordRaw[] = [
   {
+    path: "/schedules",
+    name: "schedules",
+    component: () => import("../views/SchedulesView.vue"),
+  },
+  {
     path: "/",
     name: "home",
     component: () => import("../views/HomeView.vue"),

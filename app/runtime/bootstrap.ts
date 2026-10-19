@@ -29,5 +29,7 @@ export async function bootstrap(options: { mode: RunMode }) {
     await bootstrapAuth();
     prometheus.init();
     await registry.init();
+    const schedules = await import('../schedules');
+    schedules.startSchedules();
     await api.init();
 }

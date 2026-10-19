@@ -29,7 +29,7 @@ ENV WUD_VERSION=$WUD_VERSION
 
 HEALTHCHECK --interval=30s --timeout=5s CMD if [[ -z ${WUD_SERVER_ENABLED} || ${WUD_SERVER_ENABLED} == 'true' ]]; then curl --fail http://localhost:${WUD_SERVER_PORT:-3000}/health || exit 1; else exit 0; fi;
 
-RUN apk add --no-cache tzdata openssl curl bash libstdc++
+RUN apk add --no-cache tzdata openssl curl bash libstdc++ docker-cli docker-cli-compose
 
 COPY Docker.entrypoint.sh /usr/bin/entrypoint.sh
 RUN chmod +x /usr/bin/entrypoint.sh

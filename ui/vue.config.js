@@ -10,7 +10,8 @@ module.exports = defineConfig({
     proxy: {
       "^/api": {
         target: "http://localhost:3000",
-        changeOrigin: true
+        // Preserve the browser Host so API same-origin checks also work in development.
+        changeOrigin: false
       },
       "^/auth": {
         target: "http://localhost:3000",

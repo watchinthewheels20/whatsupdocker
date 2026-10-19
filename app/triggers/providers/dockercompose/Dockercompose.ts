@@ -9,6 +9,7 @@ import { HookManager } from '../../hooks/HookManager';
 import * as event from '../../../event';
 import { performProjectTransaction } from './rollback';
 import { projectMutex } from './mutex';
+import { withUpdateLock } from '../../../updates/lock';
 
 interface ComposeImageUpdate {
     service?: string;
@@ -478,6 +479,12 @@ class Dockercompose extends Docker {
      * @returns {Promise<void>}
      */
     async triggerBatch(containers) {
+        return withUpdateLock(containers, () =>
+            this.triggerBatchUnlocked(containers),
+        );
+    }
+
+    private async triggerBatchUnlocked(containers) {
         const containersToUpdate = containers.filter((c) => c.updateAvailable);
         if (containersToUpdate.length === 0) {
             this.log.info(
@@ -721,11 +728,16 @@ class Dockercompose extends Docker {
 
                 // Update all containers
                 // (super.notify will take care of the dry-run mode for each container as well)
-                await Promise.all(
+                const updateResults = await Promise.allSettled(
                     containersToUpdate.map((container) =>
                         super.trigger(container, { runHooks: false }),
                     ),
                 );
+                const failed = updateResults.find(
+                    (result): result is PromiseRejectedResult =>
+                        result.status === 'rejected',
+                );
+                if (failed) throw failed.reason;
 
                 // Post-update hooks for all containers in this compose stack
                 if (!this.configuration.dryrun) {

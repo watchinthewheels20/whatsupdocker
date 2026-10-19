@@ -1234,7 +1234,10 @@ export class Docker extends Watcher {
     /**
      * Watch a Container.
      */
-    protected async checkContainer(container: Container) {
+    protected async checkContainer(
+        container: Container,
+        options: { emitReport?: boolean } = {},
+    ) {
         // Child logger for the container to process
         const logContainer = this.log.child({ container: fullName(container) });
         const containerWithResult = container;
@@ -1264,7 +1267,8 @@ export class Docker extends Watcher {
         try {
             const containerReport =
                 this.mapContainerToContainerReport(containerWithResult);
-            event.emitContainerReport(containerReport);
+            if (options.emitReport !== false)
+                event.emitContainerReport(containerReport);
             return containerReport;
         } catch (e: any) {
             const errorMessage = formatErrorMessage(e);

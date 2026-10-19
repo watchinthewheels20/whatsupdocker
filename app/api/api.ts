@@ -15,6 +15,8 @@ import * as serverRouter from './server';
 import * as userRouter from './user';
 import * as profileRouter from './profile';
 import * as eventRouter from './event';
+import * as updateRouter from './updates';
+import * as scheduleRouter from './schedule';
 import { requireAuthentication } from './auth';
 
 /**
@@ -69,6 +71,8 @@ export function init() {
 
     // Mount container router
     router.use('/containers', containerRouter.init());
+    router.use('/updates', updateRouter.init());
+    router.use('/schedules', scheduleRouter.init());
 
     // Mount trigger router
     router.use('/triggers', triggerRouter.init());

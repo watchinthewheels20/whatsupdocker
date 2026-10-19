@@ -6,6 +6,7 @@ import { getState } from '../../../registry';
 import { Container, ContainerImage, fullName } from '../../../model/container';
 import { Docker as DockerWatcher } from '../../../watchers/providers/docker/Docker';
 import Registry from '../../../registries/Registry';
+import { withUpdateLock } from '../../../updates/lock';
 import { Logger } from 'pino';
 import { HookManager, hookSchema, Hook } from '../../hooks/HookManager';
 import {
@@ -1855,19 +1856,32 @@ class Docker extends Trigger {
         container: Container,
         options?: { runHooks?: boolean },
     ): Promise<void> {
-        await this.performUpdate(container, {
-            gate: this.resolveRollback(container),
-            runHooks: options?.runHooks,
-        });
+        await withUpdateLock(
+            [container],
+            async () => {
+                await this.performUpdate(container, {
+                    gate: this.resolveRollback(container),
+                    runHooks: options?.runHooks,
+                });
+            },
+            'container',
+        );
     }
 
     /**
      * Update the containers.
      */
     async triggerBatch(containers: Container[]) {
-        await Promise.all(
-            containers.map((container) => this.trigger(container)),
-        );
+        await withUpdateLock(containers, async () => {
+            const results = await Promise.allSettled(
+                containers.map((container) => this.trigger(container)),
+            );
+            const failed = results.find(
+                (result): result is PromiseRejectedResult =>
+                    result.status === 'rejected',
+            );
+            if (failed) throw failed.reason;
+        });
     }
 }
 

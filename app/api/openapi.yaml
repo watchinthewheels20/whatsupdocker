@@ -694,6 +694,108 @@ paths:
                                 type: string
                 '401':
                     description: Unauthorized
+    /api/updates/options:
+        get:
+            summary: List configured update triggers and authorized Compose projects
+            responses:
+                '200':
+                    description: Triggers and stacks with availability and file access reasons
+    /api/updates/run:
+        post:
+            summary: Check selected containers and apply available updates
+            description: Requires write access. Stack scope reconciles each Compose project once. Results distinguish updated, skipped, and failed targets.
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [containerIds, triggerId, scope]
+                            properties:
+                                containerIds:
+                                    type: array
+                                    minItems: 1
+                                    maxItems: 100
+                                    uniqueItems: true
+                                    items: { type: string }
+                                triggerId: { type: string }
+                                scope: { type: string, enum: [container, stack] }
+            responses:
+                '200': { description: Per-target execution results }
+                '400': { description: Invalid request or updater }
+                '403': { description: Write access or request origin rejected }
+    /api/schedules:
+        get:
+            summary: List persistent update schedules
+            responses:
+                '200': { description: Schedules with stable target, nextRunAt, lastRunAt, lastStatus, and lastError }
+        post:
+            summary: Create a recurring check-and-apply schedule
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [name, containerId, triggerId, scope, cron]
+                            properties:
+                                name: { type: string, maxLength: 100 }
+                                containerId: { type: string, description: Current observed container used to resolve a stable target }
+                                triggerId: { type: string }
+                                scope: { type: string, enum: [container, stack] }
+                                cron: { type: string, description: Five-field cron expression }
+                                timezone: { type: string, default: Europe/London }
+                                enabled: { type: boolean, default: true }
+            responses:
+                '201': { description: Created persistent schedule }
+                '400': { description: Invalid schedule or target }
+    /api/schedules/{id}:
+        parameters:
+            - in: path
+              name: id
+              required: true
+              schema: { type: string }
+        put:
+            summary: Edit a schedule
+            description: Accepts the create fields. Omitted fields retain their values; omitted containerId retains the stable target.
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema: { type: object }
+            responses:
+                '200': { description: Updated schedule }
+                '400': { description: Invalid schedule }
+                '404': { description: Schedule not found }
+        patch:
+            summary: Edit or pause and resume a schedule
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema: { type: object, properties: { enabled: { type: boolean } } }
+            responses:
+                '200': { description: Updated schedule }
+                '404': { description: Schedule not found }
+        delete:
+            summary: Delete a schedule without cancelling an active update
+            responses:
+                '204': { description: Schedule deleted }
+                '404': { description: Schedule not found }
+    /api/schedules/{id}/run:
+        parameters:
+            - in: path
+              name: id
+              required: true
+              schema: { type: string }
+        post:
+            summary: Run a schedule immediately, including a paused schedule
+            description: Requires write access and application/json Content-Type. Uses fresh discovery and checks before applying updates.
+            responses:
+                '200': { description: Per-target execution results }
+                '404': { description: Schedule not found }
+                '409': { description: Already running or target unavailable }
+
 components:
     schemas:
         User:

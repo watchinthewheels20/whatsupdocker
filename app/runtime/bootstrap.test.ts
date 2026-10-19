@@ -20,6 +20,8 @@ jest.mock('../registry', () => ({
     registerComponents: jest.fn().mockResolvedValue(undefined),
 }));
 
+jest.mock('../schedules', () => ({ startSchedules: jest.fn() }));
+
 jest.mock('../api', () => ({
     init: jest.fn().mockResolvedValue(undefined),
 }));

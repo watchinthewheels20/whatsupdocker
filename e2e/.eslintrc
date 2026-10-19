@@ -1,6 +1,7 @@
 {
     "extends": "airbnb-base",
     "plugins": ["cucumber"],
+    "overrides": [{ "files": ["update-management.integration.js"], "parserOptions": { "ecmaVersion": 2022 }, "env": { "node": true, "es2022": true } }],
     "rules": {
         "indent": ["error", 4]
     }

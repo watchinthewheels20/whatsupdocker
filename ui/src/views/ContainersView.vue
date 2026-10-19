@@ -32,7 +32,17 @@
       
       <v-divider />
 
+      <div v-if="canWrite" class="d-flex flex-wrap align-center ga-3 pa-3" aria-label="Bulk update actions">
+        <span class="text-body-2">{{ selectedIds.length }} selected</span>
+        <v-btn size="small" variant="tonal" :disabled="!containersFiltered.length" @click="selectFiltered">Select filtered</v-btn>
+        <v-btn size="small" variant="text" :disabled="!selectedIds.length" @click="selectedIds = []">Clear selection</v-btn>
+        <v-spacer />
+        <v-btn size="small" color="primary" variant="flat" prepend-icon="mdi-package-down" :disabled="!selectedContainers.length" @click="openBulkUpdate()">Update selected</v-btn>
+      </div>
+
       <v-data-table
+        v-model="selectedIds"
+        :show-select="canWrite"
         :key="groupByLabel || 'flat'"
         v-model:items-per-page="itemsPerPage"
         :headers="headers"
@@ -215,6 +225,18 @@
                   />
                 </template>
                 <v-list density="compact">
+                  <v-list-item
+                    v-if="canWrite"
+                    prepend-icon="mdi-calendar-plus"
+                    title="Schedule updates"
+                    @click.stop="openScheduleDialog(item.raw || item)"
+                  />
+                  <v-list-item
+                    v-if="canWrite"
+                    prepend-icon="mdi-layers-outline"
+                    title="Update entire Compose stack"
+                    @click.stop="openBulkUpdate(item.raw || item, 'stack')"
+                  />
                   <v-list-item
                     v-if="(item.raw ? item.raw.updateAvailable : item.updateAvailable) && canWrite"
                     prepend-icon="mdi-package-down"
@@ -428,6 +450,9 @@
       </v-card>
     </v-dialog>
 
+    <bulk-update-dialog v-model="dialogBulkUpdate" :containers="bulkContainers" :all-containers="containers" :initial-scope="bulkScope" @updated="onBulkUpdated" />
+    <schedule-dialog v-model="dialogSchedule" :containers="containers" :container="containerToSchedule" />
+
     <!-- Update Container Dialog -->
     <container-update-dialog
       v-if="containerToUpdate"
@@ -439,6 +464,9 @@
 </template>
 
 <script lang="ts">
+import BulkUpdateDialog from "@/components/BulkUpdateDialog.vue";
+import ScheduleDialog from "@/components/ScheduleDialog.vue";
+import { UpdateContainer, UpdateScope } from "@/services/update";
 import ContainerFilter from "@/components/ContainerFilter.vue";
 import ContainerDetail from "@/components/ContainerDetail.vue";
 import ContainerError from "@/components/ContainerError.vue";
@@ -461,6 +489,8 @@ import { defineComponent } from "vue";
 
 export default defineComponent({
   components: {
+    BulkUpdateDialog,
+    ScheduleDialog,
     ContainerFilter,
     ContainerDetail,
     ContainerError,
@@ -486,6 +516,12 @@ export default defineComponent({
     }
 
     return {
+      selectedIds: [] as string[],
+      dialogBulkUpdate: false,
+      bulkContainers: [] as UpdateContainer[],
+      bulkScope: 'container' as UpdateScope,
+      dialogSchedule: false,
+      containerToSchedule: undefined as UpdateContainer | undefined,
       containers: [] as any[],
       registrySelected: "",
       watcherSelected: "",
@@ -557,8 +593,9 @@ export default defineComponent({
     eventService.off("wud:watch-stop", this._onSseWatchStop);
   },
   computed: {
+    selectedContainers(): UpdateContainer[] { return this.containers.filter((container) => this.selectedIds.includes(container.id)); },
     canWrite(): boolean {
-      if (!this.currentUser) return true;
+      if (!this.currentUser) return false;
       return this.currentUser.role === "admin" || this.currentUser.role === "rw";
     },
     headers() {
@@ -708,6 +745,15 @@ export default defineComponent({
 
   methods: {
     getRegistryProviderIcon,
+    selectFiltered() { this.selectedIds = this.containersFiltered.map((container) => container.id); },
+    openBulkUpdate(container?: UpdateContainer, scope: UpdateScope = 'container') {
+      if (!this.canWrite) return;
+      this.bulkContainers = container ? [container] : this.selectedContainers;
+      this.bulkScope = scope;
+      this.dialogBulkUpdate = true;
+    },
+    openScheduleDialog(container: UpdateContainer) { if (!this.canWrite) return; this.containerToSchedule = container; this.dialogSchedule = true; },
+    async onBulkUpdated() { this.selectedIds = []; await this.refreshContainers(); },
 
     openContainerDrawer(container: any) {
       this.selectedContainer = container;
@@ -716,6 +762,7 @@ export default defineComponent({
     },
 
     onRowClick(event: any, row: any) {
+      if (event?.target?.closest?.('button, input, .v-selection-control')) return;
       const item = row?.item?.raw || row?.item || row;
       if (item) {
         this.openContainerDrawer(item);
@@ -819,6 +866,7 @@ export default defineComponent({
       const id = typeof container === "string" ? container : container?.id;
       if (!id) return;
       this.containers = this.containers.filter((c) => c.id !== id);
+      this.selectedIds = this.selectedIds.filter((selectedId) => selectedId !== id);
       if (this.selectedContainer && this.selectedContainer.id === id) {
         this.drawerOpen = false;
         this.selectedContainer = null;

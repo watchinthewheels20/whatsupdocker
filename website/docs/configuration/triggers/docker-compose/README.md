@@ -129,6 +129,20 @@ This trigger supports all [common trigger configuration options](../README.md#co
 
 ---
 
+## Native whole-stack updates
+
+The bulk-update and schedule actions can also use this trigger to run native
+`docker compose pull` and `docker compose up --detach` for an entire project,
+including projects with one service. This explicit stack scope is separate from
+the existing per-container Docker Engine update path described below.
+
+See [Bulk updates and schedules](../../update-management.md) for the Unraid
+deployment example, authorized Compose paths, environment files, private-image
+authentication, and native reconciliation limits. Keep `AUTO=false` when updates
+should run only manually or on the saved schedule. Native stack scope requires a
+local Docker socket and does not support transactional rollback or updating the
+project containing WUD itself.
+
 ## 🔄 Updating WUD itself
 
 Replacing the container WUD runs in is a special case: the trigger has to stop

@@ -140,6 +140,16 @@ export const migrations: Migration[] = [
         name: '0004_container_delay',
         sql: [`ALTER TABLE containers ADD COLUMN delay TEXT;`],
     },
+    {
+        id: 5,
+        name: '0005_update_schedules',
+        sql: [
+            `CREATE TABLE IF NOT EXISTS update_schedules (
+            id TEXT PRIMARY KEY NOT NULL,
+            document TEXT NOT NULL
+        );`,
+        ],
+    },
 ];
 
 export function runMigrations(sqlite: Database.Database) {

@@ -136,3 +136,9 @@ export const apiTokens = sqliteTable(
         index('idx_api_tokens_hash').on(table.tokenHash),
     ],
 );
+
+// Stable logical targets survive Docker container replacement.
+export const updateSchedules = sqliteTable('update_schedules', {
+    id: text('id').primaryKey(),
+    document: text('document').notNull(),
+});

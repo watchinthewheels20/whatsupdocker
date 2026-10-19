@@ -57,6 +57,9 @@ jest.mock('./event', () => ({
     init: jest.fn(() => ({ use: jest.fn(), get: jest.fn() })),
 }));
 
+jest.mock('./updates', () => ({ init: jest.fn(() => ({})) }));
+jest.mock('./schedule', () => ({ init: jest.fn(() => ({})) }));
+
 import * as api from './api';
 import swaggerUi from 'swagger-ui-express';
 import YAML from 'yamljs';

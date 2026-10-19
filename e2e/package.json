@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "lint": "eslint '**/*.js'",
+    "test:updates": "node update-management.integration.js",
     "cucumber": "cucumber-js features/**/*.feature --tags 'not @skip and not @kubernetes and not @nomad and not @swarm'",
     "cucumber:local": "cucumber-js features/**/*.feature --tags 'not @ci-only and not @skip and not @kubernetes and not @nomad and not @swarm'",
     "cucumber:kubernetes": "cucumber-js features/kubernetes.feature --tags @kubernetes",

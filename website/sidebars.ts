@@ -122,6 +122,11 @@ const sidebars = {
         },
         {
           type: 'doc',
+          id: 'configuration/update-management',
+          label: 'Bulk Updates & Schedules',
+        },
+        {
+          type: 'doc',
           id: 'configuration/oneshot',
           label: 'One-Shot Headless Mode',
         },

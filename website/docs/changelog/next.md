@@ -7,9 +7,12 @@ description: Unreleased changes and upcoming features in WUD (What's Up Docker?)
 
 > Changes below are merged on `main` and will be included in the upcoming release.
 
+- 🚀 [CORE] Add persistent container and Compose-stack check-and-apply schedules with explicit timezones
+- 🚀 [TRIGGER] Add native whole-project Docker Compose pull and reconciliation for bulk and scheduled updates
 - 🚀 [TRIGGER] Add real-time pull progress logging for Docker images (fixes #777)
 - 🚀 [TRIGGER] Log stdout/stderr on error and expose compose_project in command trigger (fixes #594, fixes #595)
 - 🚀 [TRIGGER] Support click URL in Ntfy trigger and expose hostname in batch templates (fixes #660, fixes #725)
+- 🚀 [UI] Add bulk container selection and schedule management
 - 🚀 [UI] Display and search container metadata in log view (fixes #1419)
 - 🐛 [AUTH] Invalidate active sessions when user is deleted
 - 🐛 [CORE] Fix graceful shutdown on SIGTERM (fixes #1397)
@@ -24,6 +27,7 @@ description: Unreleased changes and upcoming features in WUD (What's Up Docker?)
 - 🐛 [UI] Fix last grouped item expansion by paginating by group (fixes #1420)
 - 🐛 [UI] Fix open redirect vulnerability on authenticated redirect (fixes #744)
 - 🐛 [WATCHER] Normalize aarch64 to arm64 in Swarm watcher (fixes #1401)
+- 📚 [DOCS] Document personal Unraid image builds, Compose mounts, and scheduled update operations
 - 📚 [TRIGGER] Document self-update configuration options for Docker Compose trigger (fixes #1414)
 
 ---

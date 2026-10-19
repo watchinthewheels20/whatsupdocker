@@ -1,0 +1,111 @@
+name: Publish personal Docker Hub image
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: Docker Hub tag (the commit tag is also published)
+        required: true
+        default: personal
+        type: string
+  push:
+    branches:
+      - feat/personal-dockerhub
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-personal-dockerhub
+  cancel-in-progress: false
+
+env:
+  IMAGE: watchinthewheels20/wud-personal
+
+jobs:
+  validate:
+    name: Validate personal source
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Require feature branch and personal update management
+        run: |
+          test "$GITHUB_REF_TYPE" = branch
+          test "$GITHUB_REF_NAME" != main
+          bash scripts/check-personal-source.sh
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: |
+            app/package-lock.json
+            ui/package-lock.json
+      - name: Install locked dependencies
+        run: |
+          npm ci --prefix app --no-audit --no-fund
+          npm ci --prefix ui --no-audit --no-fund
+      - name: Lint, unit test, and build backend
+        run: |
+          npm run lint --prefix app
+          npm test --prefix app -- --runInBand
+          npm run build --prefix app
+      - name: Lint, unit test, and build frontend
+        run: |
+          npm run lint --prefix ui -- --no-fix
+          npm run test:unit --prefix ui -- --runInBand
+          npm run build --prefix ui
+
+  publish:
+    name: Smoke test and publish linux/amd64
+    needs: validate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Check Docker Hub credentials and tag
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          REQUESTED_TAG: ${{ inputs.image_tag || 'personal' }}
+        run: |
+          if [ "$DOCKERHUB_USERNAME" != watchinthewheels20 ] || [ -z "$DOCKERHUB_TOKEN" ]; then
+            echo 'Configure DOCKERHUB_USERNAME (watchinthewheels20) and DOCKERHUB_TOKEN (Docker Hub read/write access token) in repository Actions secrets.' >&2
+            exit 1
+          fi
+          if [[ ! "$REQUESTED_TAG" =~ ^[a-zA-Z0-9_][a-zA-Z0-9_.-]{0,127}$ ]] || [[ "$REQUESTED_TAG" == sha-* ]]; then
+            echo 'Invalid tag; sha-* is reserved for commit tags.' >&2
+            exit 1
+          fi
+          echo "IMAGE_TAG=$REQUESTED_TAG" >> "$GITHUB_ENV"
+          echo "COMMIT_TAG=sha-$GITHUB_SHA" >> "$GITHUB_ENV"
+      - name: Build candidate image
+        run: |
+          docker build --platform linux/amd64 \
+            --build-arg "WUD_VERSION=personal-$GITHUB_SHA" \
+            --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
+            --label "org.opencontainers.image.revision=$GITHUB_SHA" \
+            --tag wud-personal:candidate .
+      - name: Check Compose CLI, authentication, APIs, and frontend assets
+        run: bash scripts/smoke-personal-image.sh wud-personal:candidate
+      - name: Log in to Docker Hub
+        uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3.5.0
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Publish tested image
+        run: |
+          docker tag wud-personal:candidate "$IMAGE:$COMMIT_TAG"
+          docker tag wud-personal:candidate "$IMAGE:$IMAGE_TAG"
+          docker push "$IMAGE:$COMMIT_TAG"
+          docker push "$IMAGE:$IMAGE_TAG"
+          {
+            echo '### Published Docker Hub image'
+            echo
+            echo "Compose image: \`$IMAGE:$IMAGE_TAG\`"
+            echo
+            echo "Commit image: \`$IMAGE:$COMMIT_TAG\`"
+            echo
+            echo 'Use the image digest for a permanently pinned deployment:'
+            docker image inspect "$IMAGE:$COMMIT_TAG" --format '{{range .RepoDigests}}{{println .}}{{end}}'
+          } >> "$GITHUB_STEP_SUMMARY"

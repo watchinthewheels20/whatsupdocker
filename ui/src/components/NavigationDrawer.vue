@@ -52,6 +52,11 @@
         <v-tooltip activator="parent" location="right" v-if="mini">Containers</v-tooltip>
       </v-list-item>
 
+      <v-list-item to="/schedules" class="nav-item mb-1 rounded-lg" prepend-icon="mdi-calendar-clock-outline" color="primary">
+        <v-list-item-title class="font-weight-medium">Schedules</v-list-item-title>
+        <v-tooltip activator="parent" location="right" v-if="mini">Schedules</v-tooltip>
+      </v-list-item>
+
       <!-- Section Label: Monitoring -->
       <div v-if="!mini" class="section-label px-3 mt-4 mb-1 text-overline text-medium-emphasis">
         Monitoring

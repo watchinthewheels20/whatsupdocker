@@ -69,6 +69,15 @@ export async function shutdown(
             log.error(`Error closing API server: ${e.message}`);
         }
 
+        try {
+            const schedules = await import('../schedules');
+            await schedules.stopSchedules();
+        } catch (error: unknown) {
+            log.error(
+                `Error stopping schedules: ${error instanceof Error ? error.message : String(error)}`,
+            );
+        }
+
         // 2. Deregister all components (watchers, triggers, registries, authentications)
         try {
             const registry = await import('../registry');

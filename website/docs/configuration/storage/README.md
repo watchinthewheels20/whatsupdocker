@@ -6,7 +6,7 @@ import TabItem from '@theme/TabItem';
 
 WUD uses an embedded SQLite database (managed via Drizzle ORM) stored at `/store/wud.sqlite` by default.
 
-To persist WUD state across container restarts and removals, mount `/store` as a persistent volume on your host.
+To persist WUD state across container restarts and removals, mount `/store` as a persistent volume on your host. This includes saved [update schedules](../update-management.md).
 
 :::info[Automatic Migration from legacy LokiJS]
 If you are upgrading from an older version of WUD that used LokiJS (`wud.json`), WUD will **automatically migrate** all your containers, history, and app state into the new `wud.sqlite` database upon startup. The legacy `wud.json` file will then be renamed to `wud.json.migrated` as a backup.
